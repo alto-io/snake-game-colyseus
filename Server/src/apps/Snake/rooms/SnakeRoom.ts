@@ -2,7 +2,7 @@ import { Room, Client } from "colyseus";
 import { SnakeRoomState } from "./schema/SnakeRoomState";
 import { TournamentApi } from "../../../library/TournamentApi";
 
-export class MyRoom extends Room<SnakeRoomState> {
+export class SnakeRoom extends Room<SnakeRoomState> {
   private api: TournamentApi; //This is REQUIRED
   maxClients = 1; //This limits the Colyseus room to one participant
 
