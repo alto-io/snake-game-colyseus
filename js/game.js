@@ -1,55 +1,58 @@
-import { 
-  update as updateSnake, 
+import {
+  update as updateSnake,
   draw as drawSnake,
   getSnakeHead,
-  snakeIntersection
-} from './snake.js';
-import { update as updateFood, draw as drawFood } from './food.js';
-import { outsideGrid } from './grid.js';
-import { RATE_INCREASE, ADD_SCORE } from './constants.js';
+  snakeIntersection,
+} from "./snake.js";
+import { update as updateFood, draw as drawFood } from "./food.js";
+import { outsideGrid } from "./grid.js";
+import { RATE_INCREASE, ADD_SCORE } from "./constants.js";
 
 // DOM
-const gameBoard = document.getElementById('gameBoard');
-const scoreContainer = document.getElementById('score');
-const highScoreContainer = document.getElementById('highScore');
-const playBtn = document.getElementById('play');
-const instBtn = document.getElementById('instructions');
-const loginBtn = document.getElementById('login');
-const backBtn = document.getElementById('back');
-const yesBtn = document.getElementById('yes');
-const noBtn = document.getElementById('no');
-const switchBtn = document.getElementById('switch');
-const instModal = document.getElementById('instModal');
-const titleModal = document.getElementById('titleModal');
-const overlayModal = document.getElementById('overlayModal');
-const gameOverModal = document.getElementById('gameOverModal');
-const mobileContainer = document.getElementById('mobileContainer');
-const positionText = document.getElementById('position');
+const gameBoard = document.getElementById("gameBoard");
+const scoreContainer = document.getElementById("score");
+const highScoreContainer = document.getElementById("highScore");
+const playBtn = document.getElementById("play");
+const instBtn = document.getElementById("instructions");
+const loginBtn = document.getElementById("login");
+const backBtn = document.getElementById("back");
+const yesBtn = document.getElementById("yes");
+const noBtn = document.getElementById("no");
+const switchBtn = document.getElementById("switch");
+const instModal = document.getElementById("instModal");
+const titleModal = document.getElementById("titleModal");
+const overlayModal = document.getElementById("overlayModal");
+const gameOverModal = document.getElementById("gameOverModal");
+const mobileContainer = document.getElementById("mobileContainer");
+const positionText = document.getElementById("position");
 
 // GAME LOOP
 let deltaTime = 0;
 let gameOver = false;
 let snakeSpeed = 5; //how many times the snake moves per second
 let score = 0;
-let highScore =  0;
+let highScore = 0;
 scoreContainer.innerHTML = score;
 highScoreContainer.innerHTML = score;
 
+//OPArcade: Add these variables
+let client = null;
+let isOnline = false;
 
-function main (currentTime) {
+function main(currentTime) {
   if (gameOver) {
     if (score > highScore) {
       highScore = score;
       localStorage.setItem("highScore", highScore);
     }
 
-    gameOverModal.classList.remove('display-none');
+    gameOverModal.classList.remove("display-none");
   } else {
     window.requestAnimationFrame(main);
     const secondsSinceLastRender = (currentTime - deltaTime) / 1000;
-    
+
     // # of seconds between each move
-    if (secondsSinceLastRender < 1 / snakeSpeed) return
+    if (secondsSinceLastRender < 1 / snakeSpeed) return;
     deltaTime = currentTime;
 
     update();
@@ -57,20 +60,43 @@ function main (currentTime) {
   }
 }
 
-function startGame() {
+async function startGame() {
+  //OPArcade: Get authentication parameters from GET request
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(urlSearchParams.entries());
+
+  //OPArcade: Flag as online (tournament) if additional parameters detected
+  if (params.playerid && params.otp && params.tourneyid) {
+    isOnline = true;
+  }
+
+  //OPArcade: Attempt Colyseus connection if flagged as online (tournament)
+  if (isOnline) {
+    //OPArcade: Connect to Colyseus
+    client = new Colyseus.Client(
+      "ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
+    );
+
+    await client.joinOrCreate("snake_room", {
+      playerid: params.playerid,
+      otp: params.otp,
+      tourneyid: params.tourneyid,
+    });
+  }
+
   retrieveScore();
-  overlayModal.style.display = 'none';
+  overlayModal.style.display = "none";
   window.requestAnimationFrame(main);
 }
 
 function instructions() {
-  instModal.classList.remove('display-none');
-  titleModal.classList.add('display-none');
+  instModal.classList.remove("display-none");
+  titleModal.classList.add("display-none");
 }
 
 function back() {
-  instModal.classList.add('display-none');
-  titleModal.classList.remove('display-none');
+  instModal.classList.add("display-none");
+  titleModal.classList.remove("display-none");
 }
 
 function update() {
@@ -80,7 +106,7 @@ function update() {
 }
 
 function draw() {
-  gameBoard.innerHTML = '';
+  gameBoard.innerHTML = "";
   drawSnake(gameBoard);
   drawFood(gameBoard);
 }
@@ -93,12 +119,13 @@ function compareScore(score, highScore) {
   if (score > highScore) {
     highScore = score;
     highScoreContainer.innerHTML = highScore;
-  } return
+  }
+  return;
 }
 
 function retrieveScore() {
-  if (localStorage.getItem('highScore') !== null) {
-    highScore = parseInt(localStorage.getItem('highScore'));
+  if (localStorage.getItem("highScore") !== null) {
+    highScore = parseInt(localStorage.getItem("highScore"));
     highScoreContainer.innerHTML = highScore;
   }
 }
@@ -106,16 +133,15 @@ function retrieveScore() {
 function restartGame() {
   score = 0;
   highScore = 0;
-  window.location = "/snake-game/";
-  // window.location = "/";
+  window.location = "/";
 }
 
 function toggleSwitch() {
-  mobileContainer.classList.toggle('row-reverse');
+  mobileContainer.classList.toggle("row-reverse");
   if (positionText.innerHTML === "left") {
-    positionText.innerHTML = "right"
+    positionText.innerHTML = "right";
   } else {
-    positionText.innerHTML = "left"
+    positionText.innerHTML = "left";
   }
 }
 
@@ -135,9 +161,9 @@ export function addScore() {
   compareScore(score, highScore);
 }
 
-playBtn.addEventListener('click', startGame);
-instBtn.addEventListener('click', instructions);
-backBtn.addEventListener('click', back);
-yesBtn.addEventListener('click', restartGame);
-noBtn.addEventListener('click', restartGame);
-switchBtn.addEventListener('click', toggleSwitch);
+playBtn.addEventListener("click", startGame);
+instBtn.addEventListener("click", instructions);
+backBtn.addEventListener("click", back);
+yesBtn.addEventListener("click", restartGame);
+noBtn.addEventListener("click", restartGame);
+switchBtn.addEventListener("click", toggleSwitch);

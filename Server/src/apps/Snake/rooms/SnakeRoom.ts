@@ -23,7 +23,7 @@ export class SnakeRoom extends Room<SnakeRoomState> {
   }
 
   onCreate(options: any) {
-    this.api = new TournamentApi(); //This initializes the OPArcade tourney functions
+    this.api = new TournamentApi(); //This initializes the OPArcade tourney functions, keep this
     this.setState(new SnakeRoomState());
     this.registerMessages();
   }
@@ -36,7 +36,7 @@ export class SnakeRoom extends Room<SnakeRoomState> {
     });
   }
 
-  //This is a stub required for OPArcade integration
+  //This is a stub required for OPArcade integration, no need to modify this
   onAuth(client: Client, options: Record<string, string>): boolean {
     console.log(options);
     this.playerId = options.playerid;
