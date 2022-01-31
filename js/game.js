@@ -30,14 +30,16 @@ const positionText = document.getElementById("position");
 let deltaTime = 0;
 let gameOver = false;
 let snakeSpeed = 5; //how many times the snake moves per second
-let score = 0;
+export var score = 0;
 let highScore = 0;
 scoreContainer.innerHTML = score;
 highScoreContainer.innerHTML = score;
 
-//OPArcade: Add these variables
+//OPArcade: Add these variables for communication with other files
 let client = null;
-let isOnline = false;
+export var room = null;
+export var isOnline = false;
+export var foodPosition = "";
 
 function main(currentTime) {
   if (gameOver) {
@@ -77,16 +79,50 @@ async function startGame() {
       "ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
     );
 
-    await client.joinOrCreate("snake_room", {
-      playerid: params.playerid,
-      otp: params.otp,
-      tourneyid: params.tourneyid,
-    });
+    await client
+      .joinOrCreate("snake_room", {
+        playerid: params.playerid,
+        otp: params.otp,
+        tourneyid: params.tourneyid,
+      })
+      .then((r) => {
+        room = r;
+
+        //OPArcade:  Initialize first food position from server info, this callback is called only once
+        room.onStateChange.once((state) => {
+          foodPosition = JSON.parse(state.foodPosition);
+        });
+
+        registerCallbacks();
+      })
+      .catch((e) => {
+        console.log(e);
+        isOnline = false;
+      });
   }
 
   retrieveScore();
   overlayModal.style.display = "none";
   window.requestAnimationFrame(main);
+}
+
+//OPArcade: Register callbacks from Colyseus Server
+function registerCallbacks() {
+  room.state.onChange = (changes) => {
+    changes.forEach((change) => {
+      switch (change.field) {
+        case "foodPosition":
+          foodPosition = JSON.parse(change.value);
+          break;
+        case "score":
+          score = change.value;
+          break;
+        case "gameOver":
+          gameOver = change.value;
+          break;
+      }
+    });
+  };
 }
 
 function instructions() {
@@ -112,6 +148,11 @@ function draw() {
 }
 
 function checkDeath() {
+  //OPArcade: Death is determined server-side, but proceed to check locally in case there is lag
+  if (isOnline) {
+    if (gameOver) return true;
+  }
+
   gameOver = outsideGrid(getSnakeHead()) || snakeIntersection();
 }
 
@@ -153,9 +194,13 @@ export function increaseSpeed() {
 }
 
 export function addScore() {
-  score += Math.floor(snakeSpeed) + ADD_SCORE;
-  if (snakeSpeed >= 10) {
-    score += Math.floor(snakeSpeed) + ADD_SCORE * 2;
+  //OPArcade: Score will  be coming from Server
+  if (isOnline) {
+  } else {
+    score += Math.floor(snakeSpeed) + ADD_SCORE;
+    if (snakeSpeed >= 10) {
+      score += Math.floor(snakeSpeed) + ADD_SCORE * 2;
+    }
   }
   scoreContainer.innerHTML = score;
   compareScore(score, highScore);
