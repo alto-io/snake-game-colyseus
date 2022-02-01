@@ -11,8 +11,4 @@ export class SnakeRoomState extends Schema {
   //score
   @type("number")
   score = 0;
-
-  //food x coordinate
-  @type("string")
-  foodPosition = JSON.stringify(randomGridPosition());
 }

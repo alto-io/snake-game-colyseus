@@ -2,13 +2,8 @@ import { Room, Client, subscribeLobby } from "colyseus";
 import { SnakeRoomState } from "./schema/SnakeRoomState";
 import { TournamentApi } from "../../../library/TournamentApi";
 
-import {
-  updateSnakeBody,
-  getSnakeHead,
-  snakeIntersection,
-  onSnake,
-} from "./snake.js";
-import { update as updateFood, food } from "./food.js";
+import { updateSnakeBody, getSnakeHead, snakeIntersection } from "./snake.js";
+import { update as updateFood, food, setFood } from "./food.js";
 import { outsideGrid } from "./grid.js";
 import { RATE_INCREASE, ADD_SCORE } from "./constants.js";
 
@@ -22,9 +17,8 @@ export class SnakeRoom extends Room<SnakeRoomState> {
   playerId: string;
   tourneyId: string;
   token: string;
-  score: number;
 
-  snakeSpeed = 5;
+  snakeSpeed = 5; //needed to be kept track of for score computation
 
   //call this function at the end of the game round to send the score to OPArcade servers for posting
   submitScore() {
@@ -45,11 +39,11 @@ export class SnakeRoom extends Room<SnakeRoomState> {
 
   private registerMessages() {
     this.onMessage("*", (client, message: string) => {
-      updateSnakeBody(JSON.parse(message)); // this is infomation from Client
+      updateSnakeBody(JSON.parse(message).snake); // this is infomation from Client
+      setFood(JSON.parse(message).food);
 
       //we do computation on server based on input from client and then mirror the data back to client
       updateFood();
-      this.state.foodPosition = JSON.stringify(food);
 
       this.checkDeath();
 

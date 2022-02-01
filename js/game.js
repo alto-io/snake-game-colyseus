@@ -3,8 +3,9 @@ import {
   draw as drawSnake,
   getSnakeHead,
   snakeIntersection,
+  getSnakeBody,
 } from "./snake.js";
-import { update as updateFood, draw as drawFood } from "./food.js";
+import { update as updateFood, draw as drawFood, getFood } from "./food.js";
 import { outsideGrid } from "./grid.js";
 import { RATE_INCREASE, ADD_SCORE } from "./constants.js";
 
@@ -39,7 +40,6 @@ highScoreContainer.innerHTML = score;
 let client = null;
 export var room = null;
 export var isOnline = false;
-export var foodPosition = "";
 
 function main(currentTime) {
   if (gameOver) {
@@ -77,6 +77,8 @@ async function startGame() {
     //OPArcade: Connect to Colyseus
     client = new Colyseus.Client(
       "ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
+      //"wss://zb3vqh.colyseus.de:443" //test
+      //"wss://txlmav.us-east-vin.colyseus.net" //alpha
     );
 
     await client
@@ -87,12 +89,6 @@ async function startGame() {
       })
       .then((r) => {
         room = r;
-
-        //OPArcade:  Initialize first food position from server info, this callback is called only once
-        room.onStateChange.once((state) => {
-          foodPosition = JSON.parse(state.foodPosition);
-        });
-
         registerCallbacks();
       })
       .catch((e) => {
@@ -111,9 +107,6 @@ function registerCallbacks() {
   room.state.onChange = (changes) => {
     changes.forEach((change) => {
       switch (change.field) {
-        case "foodPosition":
-          foodPosition = JSON.parse(change.value);
-          break;
         case "score":
           score = change.value;
           break;
@@ -137,8 +130,21 @@ function back() {
 
 function update() {
   updateSnake();
+
+  if (isOnline) {
+    room.send(`{
+      "food" : ${JSON.stringify(getFood())},      
+      "snake": ${JSON.stringify(getSnakeBody())}
+    }`);
+  }
+
   updateFood();
   checkDeath();
+
+  if (isOnline) {
+    scoreContainer.innerHTML = score;
+    compareScore(score, highScore);
+  }
 }
 
 function draw() {
@@ -174,7 +180,14 @@ function retrieveScore() {
 function restartGame() {
   score = 0;
   highScore = 0;
-  window.location = "/";
+
+  //OPArcade:  When game ends, send a message to OPArcade's IFrame container!
+  if (isOnline) {
+    //window.parent.postMessage("end-round", "https://test.outplay.games"); //test
+    window.parent.postMessage("end-round", "https://alpha.outplay.games"); //alpha
+  } else {
+    window.location = "/";
+  }
 }
 
 function toggleSwitch() {
@@ -195,8 +208,7 @@ export function increaseSpeed() {
 
 export function addScore() {
   //OPArcade: Score will  be coming from Server
-  if (isOnline) {
-  } else {
+  if (!isOnline) {
     score += Math.floor(snakeSpeed) + ADD_SCORE;
     if (snakeSpeed >= 10) {
       score += Math.floor(snakeSpeed) + ADD_SCORE * 2;

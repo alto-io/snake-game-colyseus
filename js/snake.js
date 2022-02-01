@@ -1,10 +1,14 @@
 // THE SNAKE
 import { getInputDirection } from "./input.js";
-import { room, isOnline } from "./game.js"; //OPArcade: importing these variables to send snake location to server
 
 const snakeBody = [{ x: 11, y: 11 }];
 
 let newSegments = 0;
+
+//OPArcade: Helper function.. we will send this to server
+export function getSnakeBody() {
+  return snakeBody;
+}
 
 export function update() {
   addSegments();
@@ -14,11 +18,6 @@ export function update() {
   }
   snakeBody[0].x += inputDirection.x;
   snakeBody[0].y += inputDirection.y;
-
-  //OPArcade: send snake to server
-  if (isOnline) {
-    room.send(JSON.stringify(snakeBody));
-  }
 }
 
 export function draw(gameBoard) {

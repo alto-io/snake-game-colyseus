@@ -1,9 +1,14 @@
 import { EXPANSION_RATE } from "./constants.js";
 import { onSnake, expandSnake } from "./snake.js";
 import { randomGridPosition } from "./grid.js";
-import { increaseSpeed, addScore, isOnline, foodPosition } from "./game.js"; //OPArcade: Added isOnline and foodPosition here
+import { increaseSpeed, addScore } from "./game.js";
 
 let food = getRandomFoodPosition();
+
+//OPArcade: Helper function... we will send this to server
+export function getFood() {
+  return food;
+}
 
 export function update() {
   if (onSnake(food)) {
@@ -24,13 +29,8 @@ export function draw(gameBoard) {
 
 function getRandomFoodPosition() {
   let newFoodPosition;
-  if (isOnline) {
-    //OPArcade: Food Position Variable from Server
-    newFoodPosition = foodPosition;
-  } else {
-    while (newFoodPosition == null || onSnake(newFoodPosition)) {
-      newFoodPosition = randomGridPosition();
-    }
+  while (newFoodPosition == null || onSnake(newFoodPosition)) {
+    newFoodPosition = randomGridPosition();
   }
   return newFoodPosition;
 }

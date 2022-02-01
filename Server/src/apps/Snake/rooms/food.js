@@ -1,23 +1,18 @@
 import { EXPANSION_RATE } from "./constants.js";
 import { onSnake, expandSnake } from "./snake.js";
-import { randomGridPosition } from "./grid.js";
 import { roomReference } from "./SnakeRoom";
 
-export let food = getRandomFoodPosition();
+export let food;
+
+//OPArcade: set food coordinate once obtained from client
+export function setFood(x) {
+  food = x;
+}
 
 export function update() {
   if (onSnake(food)) {
     expandSnake(EXPANSION_RATE);
     roomReference.addScore();
     roomReference.increaseSpeed();
-    food = getRandomFoodPosition();
   }
-}
-
-function getRandomFoodPosition() {
-  let newFoodPosition;
-  while (newFoodPosition == null || onSnake(newFoodPosition)) {
-    newFoodPosition = randomGridPosition();
-  }
-  return newFoodPosition;
 }
