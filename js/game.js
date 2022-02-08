@@ -77,8 +77,8 @@ async function startGame() {
     //OPArcade: Connect to Colyseus
     client = new Colyseus.Client(
       //"ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
-      "wss://zb3vqh.colyseus.de:443" //test
-      //"wss://txlmav.us-east-vin.colyseus.net" //alpha
+      //"wss://zb3vqh.colyseus.de:443" //test
+      "wss://txlmav.us-east-vin.colyseus.net" //alpha
     );
 
     await client
@@ -100,11 +100,11 @@ async function startGame() {
     if (room) {
       room.onLeave((code) => {
         console.log(code);
-        if (code >= 1000 && !gameOver) {
+        if (code > 1000 && !gameOver) {
           alert("Connection with the server was lost");
           //window.location.replace("http://localhost:3000");
-          //window.parent.postMessage("end-round", "https://alpha.outplay.games");
-          window.parent.postMessage("end-round", "https://test.outplay.games");
+          window.parent.postMessage("end-round", "https://alpha.outplay.games");
+          //window.parent.postMessage("end-round", "https://test.outplay.games");
         }
       });
     }
@@ -196,8 +196,8 @@ function restartGame() {
 
   //OPArcade:  When game ends, send a message to OPArcade's IFrame container!
   if (isOnline) {
-    window.parent.postMessage("end-round", "https://test.outplay.games"); //test
-    //window.parent.postMessage("end-round", "https://alpha.outplay.games"); //alpha
+    //window.parent.postMessage("end-round", "https://test.outplay.games"); //test
+    window.parent.postMessage("end-round", "https://alpha.outplay.games"); //alpha
   } else {
     window.location = "/";
   }
