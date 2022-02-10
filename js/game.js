@@ -73,12 +73,12 @@ async function startGame() {
   }
 
   //OPArcade: Attempt Colyseus connection if flagged as online (tournament)
-  if (isOnline) {
+  if (true) {
     //OPArcade: Connect to Colyseus
     client = new Colyseus.Client(
-      //"ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
+      "ws://localhost:2567" //OPArcade: change this when actually deploying to OPArcade or Colyseus Arena
       //"wss://zb3vqh.colyseus.de:443" //test
-      "wss://txlmav.us-east-vin.colyseus.net" //alpha
+      //"wss://txlmav.us-east-vin.colyseus.net" //alpha
     );
 
     await client
